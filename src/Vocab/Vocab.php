@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace guttedgarden\Tiktoken\Vocab;
 
-use Closure;
 use Countable;
 use InvalidArgumentException;
 use OutOfBoundsException;
@@ -26,22 +25,25 @@ use function implode;
 use function rewind;
 use function sprintf;
 use function stream_get_meta_data;
+use function strval;
 
 /** @psalm-import-type NonEmptyByteVector from EncodeUtil */
 final class Vocab implements Countable
 {
     /** @var array<non-empty-string, int> */
-    private array $tokenToRankMap;
+    private $tokenToRankMap;
 
     /** @var array<int, non-empty-string> */
-    private array $rankToTokenMap;
+    private $rankToTokenMap;
 
     /** @param array<non-empty-string, int> $tokenRankMap */
     private function __construct(array $tokenRankMap)
     {
         $this->tokenToRankMap = $tokenRankMap;
         /** @psalm-suppress PropertyTypeCoercion */
-        $this->rankToTokenMap = array_map(Closure::fromCallable('strval'), array_flip($tokenRankMap));
+        $this->rankToTokenMap = array_map(static function ($value) {
+            return strval($value);
+        }, array_flip($tokenRankMap));
 
         if (count($this->tokenToRankMap) !== count($this->rankToTokenMap)) {
             throw new InvalidArgumentException('The map of tokens and ranks has duplicates of rank');
@@ -51,7 +53,7 @@ final class Vocab implements Countable
     /** @param non-empty-string $bpeFile */
     public static function fromFile(string $bpeFile): self
     {
-        if (! file_exists($bpeFile)) {
+        if (!file_exists($bpeFile)) {
             throw new RuntimeException(sprintf('File "%s" does not exist', $bpeFile));
         }
 
@@ -71,7 +73,7 @@ final class Vocab implements Countable
     /**
      * @param resource $stream
      *
-     * @return static
+     * @return self
      */
     public static function fromStream($stream): self
     {
@@ -87,7 +89,7 @@ final class Vocab implements Countable
 
         while ($line !== false) {
             [$encodedToken, $rank] = explode(' ', $line);
-            $token = base64_decode($encodedToken);
+            $token = base64_decode($encodedToken, true);
 
             if ($token === false) {
                 throw new ParseError(sprintf('Could not decode token "%s" at line %d', $encodedToken, $lineNo));
@@ -104,44 +106,49 @@ final class Vocab implements Countable
         return new self($map);
     }
 
-    /** @psalm-param NonEmptyByteVector $bytes */
-    public function tryGetRank(array $bytes): ?int
+    /**
+     * @param string $binary
+     * @return int|null
+     */
+    public function tryGetRank(string $binary): ?int
     {
-        return $this->tokenToRankMap[EncodeUtil::fromBytes($bytes)] ?? null;
+        if ($binary === '') {
+            throw new InvalidArgumentException('Argument $binary cannot be an empty string');
+        }
+
+        return $this->tokenToRankMap[$binary] ?? null;
     }
 
-    /**
-     * @psalm-param NonEmptyByteVector $bytes
-     *
-     * @throws OutOfBoundsException
-     */
-    public function getRank(array $bytes): int
+    /** @throws OutOfBoundsException */
+    public function getRank(string $binary): int
     {
-        $key = EncodeUtil::fromBytes($bytes);
-        if (isset($this->tokenToRankMap[$key])) {
-            return $this->tokenToRankMap[$key];
-        } else {
+        if ($binary === '') {
+            throw new InvalidArgumentException('Argument $binary cannot be an empty string');
+        }
+
+        if (!isset($this->tokenToRankMap[$binary])) {
             throw new OutOfBoundsException(sprintf(
                 'No rank for bytes vector: [%s]',
-                implode(', ', $bytes)
+                implode(', ', EncodeUtil::toBytes($binary))
             ));
         }
+
+        return $this->tokenToRankMap[$binary];
     }
 
     /**
-     * @return non-empty-string
-     *
+     * @param int $rank
+     * @return string
      * @throws OutOfBoundsException
      */
     public function getToken(int $rank): string
     {
-        if (isset($this->rankToTokenMap[$rank])) {
-            return $this->rankToTokenMap[$rank];
-        } else {
+        if (!isset($this->rankToTokenMap[$rank])) {
             throw new OutOfBoundsException(sprintf('No token for rank: %d', $rank));
         }
-    }
 
+        return $this->rankToTokenMap[$rank];
+    }
 
     /** @psalm-api */
     public function count(): int

@@ -6,6 +6,10 @@ namespace guttedgarden\Tiktoken\Vocab;
 
 interface VocabLoader
 {
-    /** @param non-empty-string $uri */
-    public function load(string $uri): Vocab;
+    /**
+     * @param string $uri
+     * @param string|null $checksum
+     * @return Vocab
+     */
+    public function load(string $uri, ?string $checksum = null): Vocab;
 }

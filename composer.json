@@ -13,7 +13,6 @@
     }
   },
   "minimum-stability": "stable",
-  "version": "1.0.0",
   "config": {
     "sort-packages": true,
     "allow-plugins": {
