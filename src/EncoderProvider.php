@@ -48,6 +48,7 @@ final class EncoderProvider
 
     /** @var array<string, string> */
     private const MODEL_PREFIX_TO_ENCODING = [
+        'gpt-4.5-' => 'o200k_base',
         'o3-' => 'o200k_base',
         'o1-' => 'o200k_base',
         'chatgpt-4o-' => 'o200k_base',
@@ -58,6 +59,7 @@ final class EncoderProvider
 
     /** @var array<string, string> */
     private const MODEL_TO_ENCODING = [
+        'gpt-4.5' => 'o200k_base',
         'o3' => 'o200k_base',
         'o1' => 'o200k_base',
         'gpt-4o' => 'o200k_base',
