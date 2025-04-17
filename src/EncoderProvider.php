@@ -55,6 +55,8 @@ final class EncoderProvider
         'gpt-4o-' => 'o200k_base',
         'gpt-4-' => 'cl100k_base',
         'gpt-3.5-turbo-' => 'cl100k_base',
+        'gpt-4.1-' => 'o200k_base',
+        'o4-mini-' => 'o200k_base',
     ];
 
     /** @var array<string, string> */
@@ -66,6 +68,11 @@ final class EncoderProvider
         'gpt-4' => 'cl100k_base',
         'gpt-3.5-turbo' => 'cl100k_base',
         'gpt-3.5' => 'cl100k_base',
+        'gpt-4.1' => 'o200k_base',
+        'gpt-4.1-mini' => 'o200k_base',
+        'gpt-4.1-nano' => 'o200k_base',
+        'o1-pro' => 'o200k_base',
+        'o4-mini' => 'o200k_base',
         'davinci-002' => 'cl100k_base',
         'babbage-002' => 'cl100k_base',
         'text-embedding-ada-002' => 'cl100k_base',
